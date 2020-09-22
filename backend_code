@@ -1,0 +1,67 @@
+#next steps. coming from a dropdown on the javascript side for them to enter a place and have it pushed to the api to return
+# a formatted address (learn how to do this) then employ the auto complete service and eventually get it to 
+# pull up the results on the map along with the list and the user can either scroll through the list and either add or 
+# reject them to a list to be uploaded to SF from the list or the the map
+
+#Solution! Just pass the Vertical into the keywork parameter
+
+import requests
+from urllib.parse import urlencode
+import pprint
+import time
+import googlemaps
+import ipywidgets
+from IPython.display import display
+
+
+#lat, lng = 40.35003, -111.95206
+
+
+lat, lng = extract_lat_lng(input('Enter the City you want nearby results from: '))
+keyword = input(f"Enter the type of vertical you're looking for:  ")
+gmaps = googlemaps.Client(key = API_KEY)
+#print(location)
+
+
+
+places_endpoint = 'https://maps.googleapis.com/maps/api/place/nearbysearch/json'
+params = {
+	'key': API_KEY,
+	"location" : f"{lat},{lng}",
+	"radius" : 500000,
+    "keyword" :keyword,   
+     
+}
+
+   
+params_encoded = urlencode(params)
+
+places_url = f"{places_endpoint}?{params_encoded}"
+#print(places_url)
+r = requests.get(places_url)
+places_result = r.json()
+places_result_filtered = r.json()['results']
+#pprint.pprint(places_result)
+
+time.sleep(3)
+params = {"page_token": "next_page_token"}
+places_result_2 = gmaps.places_nearby(page_token = places_result['next_page_token'])
+places_result_2_filtered = places_result_2['results']
+#pprint.pprint(places_result_filtered)
+#pprint.pprint(places_result_2_filtered)
+
+for place in places_result_filtered:
+    filled_list = []
+    my_place_id = place['place_id']
+    my_fields = ['name','formatted_phone_number']
+    place_details = gmaps.place(place_id = my_place_id, fields = my_fields)
+    filled_list.append(place_details['result'].values())
+    print(filled_list)
+for place_1 in places_result_2_filtered:
+    filled_list_2 = []
+    my_place_id = place_1['place_id']
+    my_fields = ['name','formatted_phone_number']
+    place_details = gmaps.place(place_id = my_place_id, fields = my_fields)
+    filled_list_2.append(place_details['result'].values())
+    pprint.pprint(filled_list_2)
+    
